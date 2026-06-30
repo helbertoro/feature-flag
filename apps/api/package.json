@@ -1,0 +1,20 @@
+{
+  "name": "@ff/api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "test": "echo \"no tests yet\""
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.13.8",
+    "hono": "^4.7.4"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.10",
+    "tsx": "^4.19.3",
+    "typescript": "^5.7.3"
+  }
+}

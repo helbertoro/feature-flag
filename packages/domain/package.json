@@ -1,0 +1,16 @@
+{
+  "name": "@ff/domain",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "echo \"no tests yet\""
+  },
+  "devDependencies": {
+    "typescript": "^5.7.3"
+  }
+}

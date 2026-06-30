@@ -1,0 +1,20 @@
+{
+  "name": "@ff/db",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "echo \"no tests yet\""
+  },
+  "dependencies": {
+    "@libsql/client": "^0.14.0",
+    "drizzle-orm": "^0.39.3"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.3"
+  }
+}

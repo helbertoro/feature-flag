@@ -14,6 +14,9 @@ out/
 .env.*
 !.env.example
 
+# Local data directory
+data/
+
 # Database (libSQL/SQLite)
 *.db
 *.db-journal
