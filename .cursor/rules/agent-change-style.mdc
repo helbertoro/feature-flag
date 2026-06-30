@@ -1,0 +1,20 @@
+---
+description: Estilo de cambios hechos por agentes (commits pequeños, no salir del alcance de la spec, no instalar dependencias sin justificar)
+alwaysApply: true
+---
+
+# Estilo de cambios de agentes
+
+- **Fuente de verdad:** `docs/pdrs/feature-flags-mvp.md` y la spec correspondiente en `docs/specs/`. No contradigas el PRD ni inventes alcance.
+- **Una spec a la vez.** Implementa solo lo que define la spec activa. No toques archivos fuera de su alcance ("In scope").
+- **No edites el PRD ni otras specs** salvo que la tarea lo pida explícitamente.
+- **Commits pequeños y atómicos**, con mensaje que describa el porqué. Un commit no debe mezclar specs distintas.
+- **No instales dependencias sin justificar.** Usa el stack ya definido (Next.js, Hono, Drizzle, libSQL, Tailwind, Vitest, Zod). Si una dep es imprescindible, justifícala y añádela con pnpm en el paquete correcto.
+- **Respeta los límites de paquetes** (ver regla `monorepo-architecture`): no crees imports prohibidos para "resolver rápido".
+- **Antes de dar por terminada una spec:** `pnpm typecheck` y `pnpm test` pasan, y se cumplen sus criterios de aceptación.
+- **No commitees secretos** (`.env`, credenciales). Solo se versiona `.env.example`.
+- Si una spec parece requerir algo fuera de su alcance, deténte y señálalo en lugar de ampliarla por tu cuenta.
+
+## Dependencias entre specs
+
+Sigue las dependencias **bloqueantes** declaradas en cada spec, no la numeración. Specs sin dependencia directa pueden implementarse en paralelo.

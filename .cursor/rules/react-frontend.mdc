@@ -1,0 +1,33 @@
+---
+description: Componentes React y convenciones de frontend en apps/web
+globs: apps/web/**/*.ts,apps/web/**/*.tsx
+alwaysApply: false
+---
+
+# React y frontend (apps/web)
+
+- Solo **componentes funcionales** con TypeScript. Next.js App Router.
+- **Server Components por defecto.** Añade `"use client"` únicamente cuando necesites estado, efectos o handlers de eventos.
+- **Datos solo vía HTTP** a través del cliente `lib/api.ts` (fetch a `apps/api`). Nunca importes `@ff/db` ni accedas a la base de datos desde la UI.
+- **Sin lógica de negocio ni de evaluación de flags en la UI.** La precedencia/evaluación vive en `packages/domain` y se consume vía `/api/v1/evaluate`.
+- Estiliza con **Tailwind** (clases utilitarias); evita CSS suelto y estilos en línea.
+- Maneja siempre estados de **carga, vacío y error** en vistas que consumen datos.
+- Las vistas del panel admin van detrás del guard de sesión; sin sesión válida, redirigen a `/login`.
+- La `key` de una flag es inmutable: en edición se muestra deshabilitada.
+- Extrae lógica reutilizable a hooks (`useXxx`); reutiliza tipos desde `@ff/domain`, no los redefinas.
+
+## Ejemplo
+
+```tsx
+// ✅ Cliente HTTP, estados explícitos
+"use client";
+import { getFlags } from "@/lib/api";
+
+export function FlagList() {
+  const { data, error, isLoading } = useFlags(); // hook que llama a lib/api
+  if (isLoading) return <Spinner />;
+  if (error) return <ErrorBanner message="No se pudieron cargar las flags" />;
+  if (data.length === 0) return <Empty>No hay flags todavía</Empty>;
+  return <ul>{data.map((f) => <FlagRow key={f.key} flag={f} />)}</ul>;
+}
+```
