@@ -1,0 +1,37 @@
+---
+description: Arquitectura del monorepo y separación de responsabilidades entre apps/web, apps/api, packages/db y packages/domain
+alwaysApply: true
+---
+
+# Arquitectura del monorepo
+
+Monorepo pnpm con cuatro paquetes. Respeta su responsabilidad y la dirección de dependencias.
+
+| Paquete | Responsabilidad | Puede importar | NUNCA debe |
+|---------|-----------------|----------------|------------|
+| `packages/domain` | Tipos compartidos, validación Zod y lógica pura (evaluador, hash sticky) | nada interno | tocar DB, HTTP, React o I/O |
+| `packages/db` | Drizzle + libSQL: schema, cliente, migraciones, seed, helpers | `packages/domain` | exponer HTTP o lógica de UI |
+| `apps/api` | Hono: endpoints REST, lee DB y delega en `domain` | `packages/db`, `packages/domain` | contener React o reglas de negocio fuera de `domain` |
+| `apps/web` | Next.js + Tailwind: UI admin | `packages/domain` (solo tipos) | importar `packages/db` ni acceder a la DB directamente |
+
+## Dirección de dependencias permitida
+
+```
+apps/web ──HTTP──▶ apps/api ──▶ packages/db ──▶ packages/domain
+   └────────────(solo tipos)──────────────────▶ packages/domain
+```
+
+- `domain` no depende de nada interno: es el núcleo puro y testeable.
+- La UI (`apps/web`) habla con el backend SOLO vía HTTP (`fetch` al cliente `lib/api.ts`); jamás importa `@ff/db`.
+- Toda regla de evaluación de flags vive en `packages/domain` (ver regla `flag-evaluation-domain`).
+- Ambientes válidos en todo el repo: exactamente `dev`, `staging`, `prod`.
+
+## Anti-ejemplos
+
+```ts
+// ❌ apps/web importando la base de datos
+import { db } from "@ff/db";        // prohibido en apps/web
+
+// ✅ apps/web consumiendo la API
+import { getFlags } from "@/lib/api"; // fetch a /api/v1/flags
+```

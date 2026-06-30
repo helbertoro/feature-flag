@@ -1,0 +1,29 @@
+---
+alwaysApply: false
+globs: **/*.test.ts,**/*.test.tsx,**/vitest.config.ts,vitest.shared.ts
+---
+# Testing con Vitest
+
+- Framework único: **Vitest**. Se ejecuta por paquete; `pnpm test` corre toda la suite y debe terminar en código 0.
+- **Ubicación:** tests en `test/**/*.test.ts` o colocados en `src/**/*.test.ts` del paquete. Config compartida en `vitest.shared.ts` (raíz) y `vitest.config.ts` por paquete (extiende la compartida con `mergeConfig`).
+- **Sin servicios externos** ni red. Consistente con RNF-03 (sin Docker/Postgres/Redis).
+- **Deterministas:** prohibido `Math.random`, fechas reales no controladas o dependencias de orden. El hash de rollout se prueba como función pura y estable.
+
+## Qué se testea y dónde
+
+- **`packages/domain`:** funciones puras (evaluador, hash sticky, validadores Zod). Cubre cada rama de precedencia y la propiedad sticky (CA-07/08/09).
+- **`packages/db`:** helpers de persistencia (p. ej. `createFlagWithDefaults` crea 3 filas de config) usando una DB temporal vía `DATABASE_PATH`.
+- **`apps/api`:** endpoints **en memoria** con `app.request(...)`, sin abrir puertos. Cubre los criterios de aceptación de la spec (códigos HTTP, payloads, `reason`).
+
+## Criterios mínimos
+
+- Cada spec aporta tests que verifican sus criterios de aceptación (CA-xx); no se da por terminada sin ellos.
+- Los casos límite de cada RF se prueban (formato de `key` inválido → 400, duplicado → 409, flag inexistente → 200 `flag_not_found`, ambiente inválido → 400, etc.).
+
+```ts
+// ✅ API en memoria, sin puertos
+import { app } from "../src/index";
+const res = await app.request("/api/v1/evaluate?flag=no.existe&environment=dev");
+expect(res.status).toBe(200);
+expect(await res.json()).toEqual({ enabled: false, reason: "flag_not_found" });
+```

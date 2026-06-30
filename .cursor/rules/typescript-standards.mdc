@@ -1,0 +1,35 @@
+---
+description: Reglas de TypeScript: tipado estricto, tipos compartidos en packages/domain, prohibido any
+globs: **/*.ts,**/*.tsx
+alwaysApply: false
+---
+
+# TypeScript
+
+- `strict: true` en todo el repo (heredado de `tsconfig.base.json`). No relajar opciones por archivo.
+- **Prohibido `any`.** Usa `unknown` y estrecha el tipo, o define el tipo correcto.
+- Los tipos de dominio compartidos viven en `packages/domain` y se importan desde ahí; no se redefinen por paquete.
+- Valida entradas externas (HTTP query/body) con **Zod** e infiere el tipo con `z.infer`. No castees con `as`.
+- Funciones y endpoints exportados llevan tipo de retorno explícito.
+- Prefiere uniones de literales (`"dev" | "staging" | "prod"`) sobre `enum`.
+- En `catch`, el error es `unknown`; estréchalo antes de usarlo.
+
+## Ejemplos
+
+```ts
+// ❌ MAL
+function evaluate(input: any) { /* ... */ }
+const env = req.query.environment as Environment;
+
+// ✅ BIEN
+import { type Environment, isValidEnvironment } from "@ff/domain";
+const raw = c.req.query("environment");
+if (!raw || !isValidEnvironment(raw)) return c.json({ error: "ambiente inválido" }, 400);
+const env: Environment = raw;
+```
+
+```ts
+// ✅ Tipos derivados de Zod, no duplicados
+export const createFlagSchema = z.object({ key: keySchema, name: z.string().min(1) });
+export type CreateFlagInput = z.infer<typeof createFlagSchema>;
+```

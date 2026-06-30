@@ -1,0 +1,35 @@
+---
+description: La lógica de evaluación de flags vive en packages/domain y debe ser pura, separada de la UI y del transporte HTTP
+globs: packages/domain/**/*.ts
+alwaysApply: false
+---
+
+# Evaluación de flags (packages/domain)
+
+- Toda la lógica de evaluación vive aquí como **funciones puras**: sin acceso a DB, red, sistema de archivos, `process.env` ni React.
+- La lectura de datos (flag, `environment_config`, `company_overrides`) ocurre en `apps/api`; el endpoint construye el input y luego llama a `evaluate(...)`. El dominio NUNCA consulta la base de datos.
+- **Determinismo obligatorio:** el rollout usa `hash(company_id + flag_key) % 100 < rollout_percentage`. Prohibido `Math.random` o cualquier fuente no estable; el resultado debe ser idéntico entre reinicios (propiedad sticky).
+- **Precedencia exacta** (no reordenar):
+
+```
+1. flag inexistente      → { enabled:false, reason:"flag_not_found" }
+2. master off (ambiente) → { enabled:false, reason:"master_off" }
+3. override de empresa    → { enabled: override.enabled, reason:"company_override" }
+4. rollout no aplica/0%   → { enabled:false, reason:"default_off" }   // incluye company_id ausente
+5. bucket < rollout%      → { enabled:true,  reason:"rollout" } | { enabled:false, reason:"default_off" }
+```
+
+- `reason` es exactamente esta unión: `"master_off" | "company_override" | "rollout" | "default_off" | "flag_not_found"`.
+- La función es totalmente testeable sin I/O (ver regla `testing-vitest`).
+
+## Forma de la función
+
+```ts
+// ✅ Pura: recibe el estado ya leído, no lo busca
+export function evaluate(input: EvalInput): EvalResult { /* aplica la precedencia */ }
+
+// ❌ Prohibido en packages/domain
+import { db } from "@ff/db";          // sin DB
+const x = Math.random();              // no determinista
+fetch("/api/...");                    // sin red
+```
